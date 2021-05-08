@@ -1,0 +1,2 @@
+https://static.usafacts.org/public/data/covid-19/covid_confirmed_usafacts.csv
+https://static.usafacts.org/public/data/covid-19/covid_deaths_usafacts.csv
