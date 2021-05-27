@@ -139,8 +139,10 @@ def print_help():
     print("To fetch data and compare:")
     print("\tCompareData.py -f <state fips> -y <year> -m <month> -d <day> -n <name of google sheet> [jhu nyt usaf]")
     print("Or")
-    print("\tCompareData.py -y <year> -m <month> -d <day> -n <name of google sheet> --st_src <state source file name inside state_sources folder>")
-    print("To compare without fetching, replace -n <name of google sheet> with -c")
+    print("\tCompareData.py -y <year> -m <month> -d <day> -n <name of google sheet> --state_config <state config file name inside state_configs folder>")
+    print("To have prompt being asked")
+    print("\tCompareData.py -a")
+    print("To compare without fetching, replace -n <name of google sheet> with --no_download or add --no_download")
     print("To print out the data, add -p flag")
 
 if __name__ == "__main__":
@@ -152,11 +154,13 @@ if __name__ == "__main__":
     jhu = False
     nyt = False
     usaf = False
+    ask = False
     print_data = False
-    compare_only = False
+    no_download = False
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "cphf:y:m:d:n:", ["st_src="])
-    except:
+        opts, args = getopt.getopt(sys.argv[1:], "aphf:y:m:d:n:", ["state_config=", "no_download"])
+    except getopt.GetoptError as err:
+        print(err)
         print_help()
         sys.exit()
     path_to_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -176,45 +180,61 @@ if __name__ == "__main__":
             sys.exit()
         elif op == "-p":
             print_data = True
-        elif op == "-c":
-            compare_only = True
-        elif op == "--st_src":
-            with open(os.path.join(path_to_root, "state_sources", arg)) as state_source_file:
-                fips = str(int(state_source_file.readline()))
-                args = [e.strip() for e in state_source_file.readlines()]
+        elif op == "-a":
+            ask = True
+        elif op == "--no_download":
+            no_download = True
+        elif op == "--state_config":
+            with open(os.path.join(path_to_root, "state_configs", arg)) as state_config_file:
+                fips = str(int(state_config_file.readline()))
+                args = [e.strip() for e in state_config_file.readlines()]
         else:
             print("unsupported option", opt)
             print_help()
             sys.exit()
-    if (fips == None) | (year == None) | (month == None) | (day == None) | ((sheet_name == None) & ~compare_only):
+    if not ask and (fips == None) | (year == None) | (month == None) | (day == None) | ((sheet_name == None) & ~no_download):
         print_help()
         sys.exit()
+    if ask:
+        print("enter year")
+        year = str(int(input()))
+        print("enter month")
+        month = str(int(input()))
+        print("enter day")
+        day = str(int(input()))
+        if not no_download:
+            print("enter sheet name")
+            sheet_name = input()
+        print("enter state config file")
+        with open(os.path.join(path_to_root, "state_configs", input())) as state_config_file:
+            fips = str(int(state_config_file.readline()))
+            args = [e.strip() for e in state_config_file.readlines()]
     sources_path_data_name = []
     path_to_temp = os.path.join(path_to_root, "temp")
     path_to_comparision = os.path.join(path_to_root, "comparision")
     for arg in args:
         if arg == "jhu":
             jhu_path = (os.path.join(path_to_temp, "jhu_case.csv"), os.path.join(path_to_temp, "jhu_death.csv"))
-            if not compare_only:
+            if not no_download:
                 with open(os.path.join(path_to_comparision, "jhu.txt"), "r") as file:
                     downloadURL(file.readline(), jhu_path[0])
                     downloadURL(file.readline(), jhu_path[1])
             sources_path_data_name.append((jhu_path, getJHU(fips, year, month, day, jhu_path[0], jhu_path[1]), "JHU"))
         elif arg == "nyt":
             nyt_path = os.path.join(path_to_temp, "nyt.csv")
-            if not compare_only:
+            if not no_download:
                 with open(os.path.join(path_to_comparision, "nyt.txt"), "r") as file:
                     downloadURL(file.readline(), nyt_path)
             sources_path_data_name.append((nyt_path, getNYT(fips, year, month, day, nyt_path), "NYT"))
         elif arg == "usaf":
             usaf_path = (os.path.join(path_to_temp, "usaf_case.csv"), os.path.join(path_to_temp, "usaf_death.csv"))
-            if not compare_only:
+            if not no_download:
                 with open(os.path.join(path_to_comparision, "usaf.txt"), "r") as file:
                     downloadURL(file.readline(), usaf_path[0])
                     downloadURL(file.readline(), usaf_path[1])
             sources_path_data_name.append((usaf_path, getUSAF(fips, year, month, day, usaf_path[0], usaf_path[1]), "USAF"))
     brstr_path = os.path.join(path_to_temp, "brstr.csv")
-    if not compare_only:
+    if not no_download:
         downloadGoogleSheet(sheet_name, brstr_path, os.path.join(path_to_root, "key", "key.json"))
     brstr_data = getBrstr(fips, year, month, day, brstr_path)
     if print_data:
