@@ -1,4 +1,4 @@
-#!/bin/python
+#! /usr/bin/python3
 import re
 import gspread
 import sys
@@ -39,7 +39,7 @@ def find(data, pattern, count = None):
     return result
 
 def removeLocationType(string):
-    string = string.replace("County", " ").replace("Borough", " ").replace("Census Area", " ").replace("Municipality", " ").replace("Municipio", " ").replace("Parish", " ")
+    string = string.replace("City and Borough").replace("County", " ").replace("Borough", " ").replace("Census Area", " ").replace("Municipality", " ").replace("Municipio", " ").replace("Parish", " ")
     return re.sub("  +", "", re.sub("Consolidated .* of", " ", string))
 
 def getBrstr(fips, year, month, day, path):
