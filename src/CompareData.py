@@ -39,7 +39,7 @@ def find(data, pattern, count = None):
     return result
 
 def removeLocationType(string):
-    string = string.replace("City and Borough").replace("County", " ").replace("Borough", " ").replace("Census Area", " ").replace("Municipality", " ").replace("Municipio", " ").replace("Parish", " ")
+    string = string.replace("City and Borough", " ").replace("Bristol Bay plus ", "").replace("County", " ").replace("Borough", " ").replace("Census Area", " ").replace("Municipality", " ").replace("Municipio", " ").replace("Parish", " ")
     return re.sub("  +", "", re.sub("Consolidated .* of", " ", string))
 
 def getBrstr(fips, year, month, day, path):
@@ -84,7 +84,7 @@ def getJHU(fips, year, month, day, case_path, death_path):
     death_total = 0
     for e in case_counties:
         if e[1] == fips_col:
-            county = case_data[e[0]][county_col]
+            county = removeLocationType(case_data[e[0]][county_col])
             case_total += int(case_data[e[0]][case_date_col])
             death_total += int(death_data[e[0]][death_date_col])
             if county != "Unassigned":
